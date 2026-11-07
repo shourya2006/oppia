@@ -31,6 +31,11 @@ const blogPostThumbnailImage = testConstants.data.blogPostThumbnailImage;
 const blogAuthorBioField = 'textarea.e2e-test-blog-author-bio-field';
 const usernameInputSelector = '.e2e-test-blog-author-name-field';
 const authorBioSaveButton = 'button.e2e-test-save-author-details-button';
+const authorDetailsModalHeaderSelector = '.e2e-test-modal-header';
+const updateUsernameIconSelector = '.e2e-test-update-blog-editor-username';
+const updateBioIconSelector = '.e2e-test-update-blog-editor-bio';
+const usernameInBlogDashboardSelector = '.e2e-test-username-visible';
+const bioInBlogDashboardSelector = '.e2e-test-bio-visible';
 const newBlogPostButtonSelector = '.e2e-test-create-blog-post-button';
 const firstPostButtonSelector = '.e2e-test-first-post-button';
 const newPostButtonSelector = '.e2e-test-new-post-button';
@@ -276,6 +281,52 @@ export class BlogPostEditor extends BaseUser {
     } else {
       await this.expectElementToBeClickable(authorBioSaveButton);
     }
+  }
+
+  /**
+   * Clicks the edit icon next to the username on the blog dashboard and
+   * waits for the author details modal to open.
+   */
+  async clickOnUpdateUsernameIcon(): Promise<void> {
+    await this.expectElementToBeVisible(updateUsernameIconSelector);
+    await this.clickOnElementWithSelector(updateUsernameIconSelector);
+    await this.expectAuthorDetailsModalToBeOpen();
+  }
+
+  /**
+   * Clicks the edit icon next to the bio on the blog dashboard and waits for
+   * the author details modal to open.
+   */
+  async clickOnUpdateBioIcon(): Promise<void> {
+    await this.expectElementToBeVisible(updateBioIconSelector);
+    await this.clickOnElementWithSelector(updateBioIconSelector);
+    await this.expectAuthorDetailsModalToBeOpen();
+  }
+
+  /**
+   * Checks that the author details modal is open, using its heading.
+   */
+  async expectAuthorDetailsModalToBeOpen(): Promise<void> {
+    await this.expectTextContentToContain(
+      authorDetailsModalHeaderSelector,
+      'Add your Author Name and Biography'
+    );
+  }
+
+  /**
+   * Checks the username shown on the blog dashboard.
+   * @param {string} username - The expected username.
+   */
+  async expectUsernameInBlogDashboardToBe(username: string): Promise<void> {
+    await this.expectTextContentToBe(usernameInBlogDashboardSelector, username);
+  }
+
+  /**
+   * Checks the bio shown on the blog dashboard.
+   * @param {string} bio - The expected bio.
+   */
+  async expectBioInBlogDashboardToBe(bio: string): Promise<void> {
+    await this.expectTextContentToBe(bioInBlogDashboardSelector, bio);
   }
 
   /**

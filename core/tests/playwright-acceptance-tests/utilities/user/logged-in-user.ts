@@ -97,6 +97,7 @@ const accountDeletionButtonInDeleteAccountPage =
   '.e2e-test-delete-my-account-button';
 const preferencesContainerSelector = '.e2e-test-preferences-container';
 const preferencesMenuLink = '.e2e-test-preferences-link';
+const blogDashboardMenuLink = '.e2e-test-blog-dashboard-link';
 const ACCOUNT_EXPORT_CONFIRMATION_MESSAGE =
   'Your data is currently being loaded and will be downloaded as a JSON formatted text file upon completion.';
 const ACCOUNT_EXPORT_CONFIRMATION_MESSAGE_2 = 'Please do not leave this page.';
@@ -1256,6 +1257,20 @@ export class LoggedInUser extends BaseUser {
     await this.clickOnElementWithSelector(preferencesMenuLink);
 
     await this.expectElementToBeVisible(preferencesContainerSelector);
+  }
+
+  /**
+   * Navigates to the blog dashboard using the profile dropdown menu. The
+   * user needs the blog post editor role for this link to be shown.
+   */
+  async navigateToBlogDashboardUsingProfileDropdown(): Promise<void> {
+    await this.expectElementToBeVisible(profileDropdown);
+    await this.clickOnElementWithSelector(profileDropdown);
+
+    await this.expectElementToBeVisible(blogDashboardMenuLink);
+    await this.clickOnElementWithSelector(blogDashboardMenuLink);
+
+    await this.expectPageURLToContain(testConstants.URLs.BlogDashboard);
   }
 
   /**

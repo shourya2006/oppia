@@ -19,31 +19,32 @@
  * BW. Register and update blog profile.
  */
 
+import {test} from '@playwright/test';
 import testConstants from '../../utilities/common/test-constants';
 import {UserFactory} from '../../utilities/common/user-factory';
 import {BlogPostEditor} from '../../utilities/user/blog-post-editor';
 import {LoggedInUser} from '../../utilities/user/logged-in-user';
-import {LoggedOutUser} from '../../utilities/user/logged-out-user';
 
 const ROLES = testConstants.Roles;
-const URLS = testConstants.URLs;
 
-describe('Blog Post Writer', function () {
-  let blogPostWriter: BlogPostEditor & LoggedInUser & LoggedOutUser;
+test.describe.configure({mode: 'serial'});
 
-  beforeAll(async () => {
+test.describe('Blog Post Writer', function () {
+  let blogPostWriter: BlogPostEditor & LoggedInUser;
+
+  test.beforeAll(async function ({browser}) {
     blogPostWriter = await UserFactory.createNewUser(
       'blogPostWriter',
       'blog_post_writer@example.com',
+      browser,
       [ROLES.BLOG_POST_EDITOR]
     );
   });
 
-  it('should be able to register on the blog platfrom', async function () {
+  test('should be able to register on the blog platform', async function () {
     // Navigate to blog dashboard.
     await blogPostWriter.reloadPage();
-    await blogPostWriter.navigateToPageUsingProfileMenu('Blog Dashboard');
-    await blogPostWriter.expectPageURLToContain(URLS.BlogDashboard);
+    await blogPostWriter.navigateToBlogDashboardUsingProfileDropdown();
 
     // Use username that is more than 35 characters long.
     await blogPostWriter.updateUserBioInRegisterModal('I am the test user.');
@@ -69,9 +70,9 @@ describe('Blog Post Writer', function () {
     await blogPostWriter.clickOnSaveProfileButton();
   });
 
-  it('should be able to update blogger details', async function () {
-    // Navigate to blog dashboard.
-    await blogPostWriter.expectScreenshotToMatch('blogDashboard', __dirname);
+  test('should be able to update blogger details', async function () {
+    // Check the blog dashboard after registering.
+    await blogPostWriter.expectScreenshotToMatch('blogDashboard');
 
     // Edit Username.
     await blogPostWriter.clickOnUpdateUsernameIcon();
@@ -90,7 +91,7 @@ describe('Blog Post Writer', function () {
     );
   });
 
-  afterAll(async () => {
+  test.afterAll(async function () {
     await UserFactory.closeAllBrowsers();
   });
 });
