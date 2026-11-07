@@ -118,9 +118,24 @@ class BlogDashboardDataHandlerTests(test_utils.GenericTestBase):
         )
         self.assertEqual(json_response['draft_blog_post_summary_dicts'], [])
 
+    def test_get_dashboard_for_new_author_returns_own_username(self) -> None:
+        """Tests that a blog post editor who has never created a post sees
+        their own username, not a placeholder, as their author name.
+        """
+        self.signup('neweditor@example.com', 'NewEditor')
+        self.add_user_role('NewEditor', feconf.ROLE_ID_BLOG_POST_EDITOR)
+        self.login('neweditor@example.com')
+        json_response = self.get_json(feconf.BLOG_DASHBOARD_DATA_URL)
+        self.assertEqual(
+            json_response['author_details']['displayed_author_name'],
+            'NewEditor',
+        )
+        self.assertEqual(json_response['author_details']['author_bio'], '')
+        self.logout()
+
     def test_get_dashboard_with_missing_author_model(self) -> None:
-        """Tests that dashboard returns default author details when
-        the author model is missing.
+        """Tests that dashboard falls back to the user's own author details
+        when the author model is missing.
         """
         self.signup('neweditor@example.com', 'NewEditor')
         new_editor_id = self.get_user_id_from_email('neweditor@example.com')
@@ -143,13 +158,13 @@ class BlogDashboardDataHandlerTests(test_utils.GenericTestBase):
                 % new_editor_id
             )
         author_model.delete()
-        # Verify dashboard returns default author details.
+        # Verify dashboard falls back to the user's own author details.
         json_response = self.get_json(
             '%s' % (feconf.BLOG_DASHBOARD_DATA_URL),
         )
         self.assertEqual(
             json_response['author_details']['displayed_author_name'],
-            'Deleted User',
+            'NewEditor',
         )
         self.assertEqual(json_response['author_details']['author_bio'], '')
         self.logout()

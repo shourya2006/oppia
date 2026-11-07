@@ -851,11 +851,11 @@ class BlogAuthorDetailsTests(test_utils.GenericTestBase):
                 # Test with strict=True (default).
                 blog_services.get_blog_author_details(self.user_id)
 
-    def test_get_blog_author_details_with_strict_false_returns_default(
+    def test_get_blog_author_details_with_strict_false_returns_user_details(
         self,
     ) -> None:
-        """Tests that get_blog_author_details returns a default
-        BlogAuthorDetails when strict=False and the model is missing.
+        """Tests that get_blog_author_details returns the user's own username
+        and bio when strict=False, the model is missing and the user exists.
         """
 
         def _mock_get_author_details_by_author(unused_user_id: str) -> None:
@@ -868,7 +868,48 @@ class BlogAuthorDetailsTests(test_utils.GenericTestBase):
         )
 
         with get_author_details_swap:
-            # With strict=False, should return a default object.
+            author_details = blog_services.get_blog_author_details(
+                self.user_id, strict=False
+            )
+            self.assertEqual(
+                author_details.displayed_author_name, self.user_name
+            )
+            self.assertEqual(author_details.author_bio, self.user_bio)
+            self.assertEqual(author_details.author_id, self.user_id)
+
+    def test_get_blog_author_details_with_strict_false_for_missing_user(
+        self,
+    ) -> None:
+        """Tests that get_blog_author_details returns placeholder values when
+        strict=False and the user no longer exists.
+        """
+        author_details = blog_services.get_blog_author_details(
+            'nonexistent_user_id', strict=False
+        )
+        self.assertEqual(author_details.displayed_author_name, 'Deleted User')
+        self.assertEqual(author_details.author_bio, '')
+        self.assertEqual(author_details.author_id, 'nonexistent_user_id')
+
+    def test_get_blog_author_details_with_strict_false_for_deleted_user(
+        self,
+    ) -> None:
+        """Tests that get_blog_author_details returns placeholder values when
+        strict=False and the user has requested account deletion.
+        """
+        user_settings = user_services.get_user_settings(self.user_id)
+        user_settings.deleted = True
+        user_services.save_user_settings(user_settings)
+
+        def _mock_get_author_details_by_author(unused_user_id: str) -> None:
+            return None
+
+        get_author_details_swap = self.swap(
+            blog_models.BlogAuthorDetailsModel,
+            'get_by_author',
+            _mock_get_author_details_by_author,
+        )
+
+        with get_author_details_swap:
             author_details = blog_services.get_blog_author_details(
                 self.user_id, strict=False
             )
@@ -876,7 +917,6 @@ class BlogAuthorDetailsTests(test_utils.GenericTestBase):
                 author_details.displayed_author_name, 'Deleted User'
             )
             self.assertEqual(author_details.author_bio, '')
-            self.assertEqual(author_details.author_id, self.user_id)
 
     def test_get_blog_author_details_create_fails(self) -> None:
         """Tests that create_blog_author_details_model raises an error when user details cannot be fetched."""

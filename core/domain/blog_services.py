@@ -971,12 +971,14 @@ def get_blog_author_details(
     Args:
         user_id: str. The user id of the blog author.
         strict: bool. Whether to raise an exception if the author details
-            are not found. When False, returns a default BlogAuthorDetails
-            with placeholder values instead.
+            are not found. When False, returns the user's own username and
+            bio if the user still exists, or placeholder values if not.
 
     Returns:
         BlogAuthorDetails. The blog author details for the given user ID.
-        When strict is False and no model is found, a default
+        When strict is False and no model is found, the user's username
+        and bio are returned if the user still exists (e.g. a new author
+        who hasn't saved their details yet). Otherwise a default
         BlogAuthorDetails with placeholder values is returned.
 
     Raises:
@@ -991,6 +993,19 @@ def get_blog_author_details(
                 'No BlogAuthorDetailsModel found for user_id=%s. '
                 'This may indicate the author\'s account was deleted '
                 'or the model was never created.' % user_id
+            )
+        user_settings = user_services.get_user_settings(user_id, strict=False)
+        if (
+            user_settings is not None
+            and not user_settings.deleted
+            and user_settings.username is not None
+        ):
+            return blog_domain.BlogAuthorDetails(
+                '',
+                user_id,
+                user_settings.username,
+                user_settings.user_bio,
+                utils.get_current_utc_datetime(),
             )
         return blog_domain.BlogAuthorDetails.create_default_author_details_for_user(
             user_id
